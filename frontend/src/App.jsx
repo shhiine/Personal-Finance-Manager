@@ -1,4 +1,5 @@
 import Transactions from './pages/Transactions.jsx'
+import Analytics from './pages/Analytics.jsx'
 import { useState } from 'react'
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, ChartPie,
@@ -17,10 +18,12 @@ const navigation = [
   { name: 'Overview', icon: LayoutDashboard },
   { name: 'Transactions', icon: ArrowLeftRight },
   { name: 'Accounts', icon: Wallet },
+  { name: 'Analytics', icon: ChartPie },
   { name: 'Budgets', icon: ChartPie },
   { name: 'Savings Goals', icon: Target },
   { name: 'Debts & EMIs', icon: HandCoins },
   { name: 'Calendar', icon: CalendarDays },
+  
 ]
 
 const chartData = [
@@ -61,6 +64,15 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
   const [transactionType, setTransactionType] = useState('Expense')
+  const [showBalance, setShowBalance] = useState(true)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [dashboardTransactions, setDashboardTransactions] = useState(transactions)
+  const [newTransaction, setNewTransaction] = useState({
+    amount: '',
+    description: '',
+    category: '',
+  })
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -166,6 +178,20 @@ function App() {
             </div>
           </header>
 
+          {showSearch && (
+            <div className="global-search">
+              <Search size={17} />
+              <input
+                autoFocus
+                value={searchQuery}
+                onChange={event => setSearchQuery(event.target.value)}
+                placeholder="Search transactions, accounts and categories..."
+                aria-label="Search Finora"
+              />
+              <button className="search-close" onClick={() => { setShowSearch(false); setSearchQuery('') }}>Esc</button>
+            </div>
+          )}
+
          {activePage === 'Transactions' ? (
   <Transactions />
 ) : (
@@ -173,7 +199,7 @@ function App() {
 
             <section className="welcome-section">
               <div>
-                <h2>Good morning!</h2>
+                <h2>Good morning Shine !</h2>
                 <p>Here's your financial overview for November.</p>
               </div>
               <button className="primary-button" onClick={() => setShowAdd(true)}>
@@ -187,10 +213,15 @@ function App() {
               <div className="balance-card">
                 <div className="balance-top">
                   <span>Total Available Balance</span>
-                  <MoreHorizontal size={20} />
+                  <button className="balance-visibility" type="button"
+                    onClick={() => setShowBalance(value => !value)}
+                    aria-label={showBalance ? 'Hide balance' : 'Show balance'}
+                    title={showBalance ? 'Hide balance' : 'Show balance'}>
+                    <MoreHorizontal size={20} />
+                  </button>
                 </div>
 
-                <h2>{money(96500)}</h2>
+                <h2>{showBalance ? money(96500) : "••••••"}</h2>
 
                 <div className="balance-change">
                   <ArrowUpRight size={15} />
@@ -374,7 +405,7 @@ function App() {
                 </div>
 
                 <div className="transaction-list">
-                  {transactions.map((transaction, i) => {
+                  {dashboardTransactions.filter(transaction => `${transaction.name} ${transaction.category}`.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5).map((transaction, i) => {
                     const Icon = transaction.icon
                     return (
                       <div className="transaction-row" key={i}>
@@ -420,11 +451,25 @@ function App() {
               ))}
             </div>
             <label>Amount (₹)</label>
-            <input type="number" min="0" placeholder="Enter amount" />
+            <input
+              type="number"
+              min="1"
+              value={newTransaction.amount}
+              onChange={event => setNewTransaction({ ...newTransaction, amount: event.target.value })}
+              placeholder="Enter amount"
+            />
             <label>Description</label>
-            <input type="text" placeholder="What was this transaction for?" />
+            <input
+              type="text"
+              value={newTransaction.description}
+              onChange={event => setNewTransaction({ ...newTransaction, description: event.target.value })}
+              placeholder="What was this transaction for?"
+            />
             <label>Category</label>
-            <select defaultValue="">
+            <select
+              value={newTransaction.category}
+              onChange={event => setNewTransaction({ ...newTransaction, category: event.target.value })}
+            >
               <option value="" disabled>Select category</option>
               <option>Food</option>
               <option>Shopping</option>
@@ -432,9 +477,25 @@ function App() {
               <option>Salary</option>
               <option>Utilities</option>
             </select>
-            <p className="modal-note">Transaction saving will be enabled when we connect the database.</p>
-            <button className="primary-button modal-submit" onClick={() => setShowAdd(false)}>
-              Close preview
+            <p className="modal-note">Saved locally for this session. Database sync will be added later.</p>
+            <button
+              className="primary-button modal-submit"
+              onClick={() => {
+                const amount = Number(newTransaction.amount)
+                if (!amount || amount <= 0 || !newTransaction.description.trim() || !newTransaction.category) return
+                const isIncome = transactionType === 'Income'
+                setDashboardTransactions(current => [{
+                  name: newTransaction.description.trim(),
+                  category: newTransaction.category,
+                  date: 'Just now',
+                  amount: isIncome ? amount : -amount,
+                  icon: isIncome ? ArrowUpRight : Wallet,
+                }, ...current])
+                setNewTransaction({ amount: '', description: '', category: '' })
+                setShowAdd(false)
+              }}
+            >
+              Save transaction
             </button>
           </div>
         </div>
