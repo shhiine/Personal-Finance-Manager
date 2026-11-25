@@ -1,6 +1,7 @@
 import Transactions from './pages/Transactions.jsx'
 import Analytics from './pages/Analytics.jsx'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useFinance } from './context/FinanceContext.jsx'
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, ChartPie,
   Target, HandCoins, CalendarDays, Settings, Plus,
@@ -43,12 +44,6 @@ const transactions = [
   { name: 'Shopping', category: 'Personal', date: 'Nov 20', amount: -1750, icon: CreditCard },
 ]
 
-const accounts = [
-  { name: 'Main Bank Account', type: 'Savings account', balance: 80000, icon: Landmark },
-  { name: 'Cash Wallet', type: 'Physical cash', balance: 4500, icon: Wallet },
-  { name: 'UPI Balance', type: 'Digital wallet', balance: 12000, icon: CircleDollarSign },
-]
-
 const money = value =>
   new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -57,6 +52,10 @@ const money = value =>
   }).format(value)
 
 function App() {
+  const { accounts, accountBalances, summary, setAccounts } = useFinance()
+  const [showAddAccount, setShowAddAccount] = useState(false)
+  const [accountForm, setAccountForm] = useState({ name: '', type: 'Savings account', openingBalance: '' })
+  const [accountError, setAccountError] = useState('')
   const [theme, setTheme] = useState(() =>
     localStorage.getItem('finora-theme') || 'light'
   )
@@ -73,6 +72,35 @@ function App() {
     description: '',
     category: '',
   })
+
+  useEffect(() => {
+    if (accounts.length === 0) {
+      setAccounts([
+        { id: 'account-main', name: 'Main Bank Account', type: 'Savings account', openingBalance: 80000, isActive: true },
+        { id: 'account-cash', name: 'Cash Wallet', type: 'Physical cash', openingBalance: 4500, isActive: true },
+        { id: 'account-upi', name: 'UPI Balance', type: 'Digital wallet', openingBalance: 12000, isActive: true },
+      ])
+    }
+  }, [accounts.length, setAccounts])
+
+  const saveAccount = () => {
+    const name = accountForm.name.trim()
+    const openingBalance = Number(accountForm.openingBalance)
+    if (!name) { setAccountError('Please enter an account name.'); return }
+    if (accounts.some(account => account.name.toLowerCase() === name.toLowerCase())) {
+      setAccountError('An account with this name already exists.'); return
+    }
+    if (accountForm.openingBalance === '' || !Number.isFinite(openingBalance) || openingBalance < 0) {
+      setAccountError('Enter a valid opening balance (zero or more).'); return
+    }
+    setAccounts(current => [...current, {
+      id: `account-${Date.now()}`, name, type: accountForm.type,
+      openingBalance, isActive: true,
+    }])
+    setAccountForm({ name: '', type: 'Savings account', openingBalance: '' })
+    setAccountError('')
+    setShowAddAccount(false)
+  }
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -221,7 +249,7 @@ function App() {
                   </button>
                 </div>
 
-                <h2>{showBalance ? money(96500) : "••••••"}</h2>
+                <h2>{showBalance ? money(summary.totalBalance) : "••••••"}</h2>
 
                 <div className="balance-change">
                   <ArrowUpRight size={15} />
@@ -374,8 +402,8 @@ function App() {
                   </button>
                 </div>
 
-                {accounts.map(account => {
-                  const Icon = account.icon
+                {accountBalances.map(account => {
+                  const Icon = account.type.toLowerCase().includes('cash') ? Wallet : account.type.toLowerCase().includes('wallet') ? CircleDollarSign : Landmark
                   return (
                     <div className="account-row" key={account.name}>
                       <div className="account-icon"><Icon size={19}/></div>
@@ -383,12 +411,12 @@ function App() {
                         <strong>{account.name}</strong>
                         <span>{account.type}</span>
                       </div>
-                      <strong>{money(account.balance)}</strong>
+                      <strong>{money(account.currentBalance)}</strong>
                     </div>
                   )
                 })}
 
-                <button className="add-account" onClick={() => setActivePage('Accounts')}>
+                <button className="add-account" onClick={() => { setAccountError(''); setShowAddAccount(true) }}>
                   <Plus size={16}/> Add new account
                 </button>
               </div>
@@ -496,6 +524,58 @@ function App() {
               }}
             >
               Save transaction
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAddAccount && (
+        <div className="modal-overlay" onClick={() => setShowAddAccount(false)}>
+          <div className="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="add-account-title" onClick={event => event.stopPropagation()}>
+            <div className="modal-heading">
+              <h3 id="add-account-title">Add Account</h3>
+              <button className="icon-button" type="button" aria-label="Close" onClick={() => setShowAddAccount(false)}>×</button>
+            </div>
+
+            <label htmlFor="account-name">Account name</label>
+            <input
+              id="account-name"
+              type="text"
+              value={accountForm.name}
+              onChange={event => setAccountForm(current => ({ ...current, name: event.target.value }))}
+              placeholder="e.g. HDFC Savings"
+              autoFocus
+            />
+
+            <label htmlFor="account-type">Account type</label>
+            <select
+              id="account-type"
+              value={accountForm.type}
+              onChange={event => setAccountForm(current => ({ ...current, type: event.target.value }))}
+            >
+              <option>Savings account</option>
+              <option>Current account</option>
+              <option>Cash</option>
+              <option>Digital wallet</option>
+              <option>Credit card</option>
+              <option>Other</option>
+            </select>
+
+            <label htmlFor="account-opening-balance">Opening balance (₹)</label>
+            <input
+              id="account-opening-balance"
+              type="number"
+              min="0"
+              step="0.01"
+              value={accountForm.openingBalance}
+              onChange={event => setAccountForm(current => ({ ...current, openingBalance: event.target.value }))}
+              placeholder="Enter opening balance"
+            />
+
+            {accountError && <p className="modal-note" role="alert" style={{ color: 'var(--red)' }}>{accountError}</p>}
+            <p className="modal-note">Your account will be saved on this device and included in your available balance.</p>
+            <button className="primary-button modal-submit" type="button" onClick={saveAccount}>
+              Save Account
             </button>
           </div>
         </div>
