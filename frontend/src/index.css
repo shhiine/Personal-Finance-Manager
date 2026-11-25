@@ -234,13 +234,13 @@ background: var(--surface);
 .cashflow-chart { width: 100%; height: 205px; }
 .budget-number { display: flex; align-items: baseline; gap: 8px; margin: 27px 0 15px; }
 .budget-number h2 { margin: 0; font-size: 29px; font-weight: 650; letter-spacing: -.6px; }
-.budget-number span { color: var(--muted); font-size: 12px; }
+.budget-number span { color: var(--muted); font-size: 15px; }
 .progress-track { height: 9px; overflow: hidden; border-radius: 20px; background: var(--border); }
 .progress-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #2457d6, #6c91f0); transition: width .4s ease; }
 .budget-details { display: flex; justify-content: space-between; margin-top: 10px; color: var(--muted); font-size: 11px; }
 .budget-details strong { color: var(--green); font-weight: 600; }
 .budget-separator { height: 1px; margin: 20px 0 12px; background: var(--border); }
-.budget-summary { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 12px; }
+.budget-summary { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; }
 .budget-summary div { display: flex; align-items: center; gap: 8px; color: var(--muted); }
 .budget-summary strong { font-weight: 600; font-variant-numeric: tabular-nums; }
 .dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -254,13 +254,68 @@ background: var(--surface);
 .text-button:hover { background: var(--blue-soft); }
 .account-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); transition: background .18s ease; }
 .account-icon, .transaction-icon { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; border-radius: 11px; color: var(--blue); background: var(--blue-soft); }
-.account-info, .transaction-info { flex: 1; min-width: 0; display: grid; gap: 5px; }
-.account-info strong, .transaction-info strong { font-size: 13px; font-weight: 600; }
+.account-info, .transaction-info 
+{
+   flex: 1; 
+   min-width:0;
+  display: grid;
+  gap: 5px; }
+.account-info strong,
+ .transaction-info strong
+  { font-size: 15px; font-weight: 600; }
 .account-info span, .transaction-info span { color: var(--muted); font-size: 12px; }
-.account-row > strong, .transaction-row > strong { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.account-row > strong, .transaction-row > strong { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .account-row:hover, .transaction-row:hover { background: var(--blue-soft); }
-.add-account { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 12px; margin-top: 12px; border: 1px dashed var(--border); border-radius: 10px; color: var(--blue); background: transparent; font-size: 12px; font-weight: 550; transition: all .18s ease; }
-.add-account:hover { border-color: var(--blue); background: var(--blue-soft); }
+.add-account
+
+.add-account {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 13px;
+
+  border: 1px solid var(--blue);
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--blue);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition: all .2s ease;
+}
+
+
+.add-account {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 13px;
+
+  border: 1px solid var(--blue);
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--blue);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  transition: all .2s ease;
+}
+
+.add-account:hover {
+  background: var(--blue-deep);
+  border-color: var(--blue-deep);
+  box-shadow: 0 5px 14px rgba(40, 89, 216, .18);
+  transform: translateY(-1px);
+}
+
 .filter-button { display: flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); background: var(--surface-raised); font-size: 12px; transition: all .18s ease; }
 .filter-button:hover { color: var(--blue); border-color: var(--blue); }
 .transaction-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); transition: background .18s ease; }
