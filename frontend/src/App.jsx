@@ -1,5 +1,6 @@
 import Transactions from './pages/Transactions.jsx'
 import Analytics from './pages/Analytics.jsx'
+import { useFinance } from './context/FinanceContext'
 import { useState } from 'react'
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, ChartPie,
@@ -61,10 +62,17 @@ const transactionCategories = {
   Income: ['Salary','Gift','Freelance', 'Investment', 'Other'],
 }
 
-function App() {
+function App()
+ { const {
+  accounts: financeAccounts,
+  transactions: financeTransactions,
+  setTransactions,
+} = useFinance()
+  
   const [theme, setTheme] = useState(() =>
     localStorage.getItem('finora-theme') || 'light'
   )
+  
   const [activePage, setActivePage] = useState('Overview')
   const [mobileMenu, setMobileMenu] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
@@ -74,9 +82,10 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dashboardTransactions, setDashboardTransactions] = useState(transactions)
   const [newTransaction, setNewTransaction] = useState({
-    amount: '',
-    description: '',
-    category: '',
+     amount: '',
+  description: '',
+  category: '',
+  accountId: '',
   })
 
   const toggleTheme = () => {
@@ -483,23 +492,76 @@ function App() {
   </option>
 ))}
             </select>
+            <label>Account</label>
+<select
+  value={newTransaction.accountId}
+  onChange={event =>
+    setNewTransaction({
+      ...newTransaction,
+      accountId: event.target.value,
+    })
+  }
+>
+  <option value="" disabled>
+    Select account
+  </option>
+
+  {financeAccounts.map(account => (
+    <option key={account.id} value={account.id}>
+      {account.name}
+    </option>
+  ))}
+</select>
             <p className="modal-note">Saved locally for this session. Database sync will be added later.</p>
             <button
               className="primary-button modal-submit"
-              onClick={() => {
-                const amount = Number(newTransaction.amount)
-                if (!amount || amount <= 0 || !newTransaction.description.trim() || !newTransaction.category) return
-                const isIncome = transactionType === 'Income'
-                setDashboardTransactions(current => [{
-                  name: newTransaction.description.trim(),
-                  category: newTransaction.category,
-                  date: 'Just now',
-                  amount: isIncome ? amount : -amount,
-                  icon: isIncome ? ArrowUpRight : Wallet,
-                }, ...current])
-                setNewTransaction({ amount: '', description: '', category: '' })
-                setShowAdd(false)
-              }}
+            
+onClick={() => {
+  const amount = Number(newTransaction.amount)
+  const description = newTransaction.description.trim()
+
+  if (
+    !amount ||
+    amount <= 0 ||
+    !description ||
+    !newTransaction.category ||
+    !newTransaction.accountId
+  ) return
+
+  const isIncome = transactionType === 'Income'
+
+  const transaction = {
+    id: `transaction-${Date.now()}`,
+    type: transactionType,
+    amount,
+    description,
+    category: newTransaction.category,
+    accountId: newTransaction.accountId,
+    date: new Date().toISOString(),
+  }
+
+  // Save to FinanceContext
+  setTransactions(current => [transaction, ...current])
+
+  // Update the dashboard's recent transaction display
+  setDashboardTransactions(current => [{
+    name: description,
+    category: newTransaction.category,
+    date: 'Just now',
+    amount: isIncome ? amount : -amount,
+    icon: isIncome ? ArrowUpRight : Wallet,
+  }, ...current])
+
+  setNewTransaction({
+    amount: '',
+    description: '',
+    category: '',
+    accountId: '',
+  })
+
+  setShowAdd(false)
+}}
+
             >
               Save transaction
             </button>
